@@ -1,9 +1,9 @@
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
-  title: "Noob's Blog",
-  author: 'Ali Hamza', 
-  headerTitle: 'NOOB',
-  description: 'A blog dedicated to share my journey in Cyber Security',
+  title: "Basim's Blog",
+  author: 'Basim Mehdi', 
+  headerTitle: 'Basim Mehdi',
+  description: 'A blog dedicated to share my Writeups etcy',
   language: 'en-us',
   theme: 'system', // system, dark or light
   siteUrl: 'https://tailwind-nextjs-starter-blog.vercel.app',
@@ -12,7 +12,7 @@ const siteMetadata = {
   socialBanner: `${process.env.BASE_PATH || ''}/static/images/twitter-card.png`,
   mastodon: 'https://mastodon.social/@mastodonuser',
   email: 'address@yoursite.com',
-  github: 'https://github.com/0xNoo3',
+  github: 'https://github.com/Basim-Mehdi/',
   // x: 'https://twitter.com/x',
   // twitter: 'https://twitter.com/Twitter',
   // facebook: 'https://facebook.com',
