@@ -8,7 +8,7 @@ summary: A step-by-step guide to hosting your own Capture The Flag (CTF) event u
 
 ## Introduction
 
-In this Blog, I’ll share how I hosted my own Capture The Flag (CTF) competition C00K3D CTF- Batch Zero using **CTFd**, deployed on **AWS Lightsail**, secured with **Cloudflare**, and powered by **Dockerized challenge containers** for Web and Pwn categories.
+In this Blog, I’ll share how I hosted my own Capture The Flag (CTF) competition `C00K3D CTF- Batch Zero` using **CTFd**, deployed on **AWS Lightsail**, secured with **Cloudflare**, and powered by **Dockerized challenge containers** for Web and Pwn categories.
 Lightsail made it easy to deploy a simple, affordable virtual private server with predictable pricing, while Docker allowed me to manage both the CTFd platform and individual challenges in isolated containers.
 
 ---
@@ -58,7 +58,7 @@ Before starting, you should have:
 
    ![Lightsail Networking Settings](/static/images/ctfd/select_rules.png)
 
-   - Select All TCP and All UDP --> Create
+   - Select **All TCP and All UDP** --> Create
 
    ![Lightsail Networking Settings](/static/images/ctfd/All_TCP.png)
 
@@ -73,7 +73,7 @@ Before starting, you should have:
 1. Buy a domain from a registrar such as [Hostinger](https://www.hostinger.com/).
 
    - I bought it from hostinger so I'll tell how I did so
-      - Go to the Domains section at Left Side Navbar 
+      - Go to the **Domains section** at Left Side Navbar 
       - Click **Add new Domain**
 
    ![Get a Domain](/static/images/ctfd/get_domain.png) 
@@ -124,10 +124,11 @@ Before starting, you should have:
       - Click on Configure -> Scroll Down -> Select Flexible -> Save
 
    ![Cloudflare SSL Configure](/static/images/ctfd/cloudfare_ssl_configure.png)
+      
+      - On the Left side of Navbar **SSL/TLS** -> **Edge Certificates** 
+         - Scroll down untill you reach **Automatic HTTPS Rewrites** and Enable it
 
-6. Enable **Firewall Rules** to filter unwanted traffic.
-
-![Cloudflare DNS Settings](/static/images/ctfd/cloudflare-dns.png)
+   ![Cloudfare Automated HTTPS Rewrites](/static/images/ctfd/cloudfare_automated_https.png)
 
 ---
 
