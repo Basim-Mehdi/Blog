@@ -8,9 +8,7 @@ summary: A step-by-step guide to hosting your own Capture The Flag (CTF) event u
 
 ## Introduction
 In this Blog, I’ll share how I hosted my own Capture The Flag (CTF) competition C00K3D CTF- Batch Zero using **CTFd**, deployed on **AWS Lightsail**, secured with **Cloudflare**, and powered by **Dockerized challenge containers** for Web and Pwn categories.
-
 Lightsail made it easy to deploy a simple, affordable virtual private server with predictable pricing, while Docker allowed me to manage both the CTFd platform and individual challenges in isolated containers.
-
 ---
 
 ## Prerequisites
@@ -116,8 +114,15 @@ Before starting, you should have:
    ![Cname Configure](/static/images/ctfd/Cname_Cloudfare.png)
 
 5. In SSL/TLS settings:
-   - Mode: **Full**
+   - Mode: **Flexible**
    - Enable **Always Use HTTPS**
+
+   ![Cloudflare SSL Overview](/static/images/ctfd/cloudflare_ssl_overview.png)
+   
+      - Click on Configure -> Scroll Down -> Select Flexible -> Save
+
+   ![Cloudflare SSL Configure](/static/images/ctfd/cloudflare_ssl_configure.png)
+
 6. Enable **Firewall Rules** to filter unwanted traffic.
 
 ![Cloudflare DNS Settings](/static/images/ctfd/cloudflare-dns.png)
