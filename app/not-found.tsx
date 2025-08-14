@@ -2,24 +2,26 @@ import Link from '@/components/Link'
 
 export default function NotFound() {
   return (
-    <div className="flex flex-col items-start justify-start md:mt-24 md:flex-row md:items-center md:justify-center md:space-x-6">
-      <div className="space-x-2 pt-6 pb-8 md:space-y-5">
-        <h1 className="text-6xl leading-9 font-extrabold tracking-tight text-gray-900 md:border-r-2 md:px-6 md:text-8xl md:leading-14 dark:text-gray-100">
-          404
-        </h1>
-      </div>
-      <div className="max-w-md">
-        <p className="mb-4 text-xl leading-normal font-bold md:text-2xl">
-          Sorry we couldn't find this page.
-        </p>
-        <p className="mb-8">But dont worry, you can find plenty of other things on our homepage.</p>
-        <Link
-          href="/"
-          className="focus:shadow-outline-blue inline rounded-lg border border-transparent bg-blue-600 px-4 py-2 text-sm leading-5 font-medium text-white shadow-xs transition-colors duration-150 hover:bg-blue-700 focus:outline-hidden dark:hover:bg-blue-500"
-        >
-          Back to homepage
-        </Link>
-      </div>
+<div className="flex flex-col items-center justify-center min-h-screen px-4 text-center bg-gradient-to-b from-gray-50 to-gray-200 dark:from-gray-900 dark:to-gray-800">
+  <div className="flex flex-col md:flex-row md:items-center md:space-x-8">
+    <h1 className="text-7xl md:text-9xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 animate-pulse">
+      👾 404 
+    </h1>
+    <div className="mt-6 md:mt-0">
+      <p className="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100">
+        Oops! This page vanished into the cyber void.
+      </p>
+      <p className="mb-8 text-gray-600 dark:text-gray-300">
+        But don’t worry — there’s plenty to explore back on our homepage.
+      </p>
+      <Link
+        href="/"
+        className="inline-block rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-lg font-medium text-white shadow-lg transition-transform transform hover:scale-105 hover:shadow-xl focus:outline-none"
+      >
+        🔙 Back to Homepage
+      </Link>
     </div>
+  </div>
+</div>
   )
 }
