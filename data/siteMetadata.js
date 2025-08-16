@@ -1,7 +1,7 @@
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
   title: "Endless Failure's Blog",
-  author: 'Basim Mehdi', 
+  author: 'Basim Mehdi',
   headerTitle: 'Endless Failure ⚡',
   description: 'My personal log of growth, learning, and exploration in Cyber Security.',
   language: 'en-us',

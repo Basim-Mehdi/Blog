@@ -1,6 +1,6 @@
 ---
-title: Hosting a CTF Using CTFd on AWS 
-date: '2025-08-14'      
+title: Hosting a CTF Using CTFd on AWS
+date: '2025-08-14'
 tags: ['CTF', 'AWS', 'Lightsail', 'Cloudflare', 'Docker', 'CTFd', 'Writeup']
 draft: false
 summary: A step-by-step guide to hosting your own Capture The Flag (CTF) event using CTFd, AWS Lightsail, Cloudflare, and Dockerized challenges.
@@ -11,12 +11,14 @@ summary: A step-by-step guide to hosting your own Capture The Flag (CTF) event u
 In this Blog, I’ll share how I hosted my own Capture The Flag (CTF) competition `C00K3D CTF- Batch Zero` using **CTFd**, deployed on **AWS Lightsail**, secured with **Cloudflare**, and powered by **Dockerized challenge containers** for Web and Pwn categories.
 Lightsail made it easy to deploy a simple, affordable virtual private server with predictable pricing, while Docker allowed me to manage both the CTFd platform and individual challenges in isolated containers.
 
- ![Cooked CTF - Batch Zero](/static/images/ctfd/cooked_ctf_logo.png)
- 
+![Cooked CTF - Batch Zero](/static/images/ctfd/cooked_ctf_logo.png)
+
 ---
 
 ## Prerequisites
+
 Before starting, you should have:
+
 - An AWS account and familiarity with the **Lightsail** service for deploying virtual servers.
 - A domain name (can be managed via **Cloudflare**) and a basic understanding of DNS management.
 - Basic knowledge of **Linux** commands and how to use **Docker** for containerization.
@@ -27,12 +29,13 @@ Before starting, you should have:
 ---
 
 ## Step 1: Create AWS Lightsail Instance
+
 1. Sign in to the **AWS Lightsail console**.
 2. Click **Create Instance**.
 
    ![AWS Lightsail Instance Creation](/static/images/ctfd/lightsail-instance-create.png)
 
-3. Select Availaible Region **closest to you**, I selected Mumbai 
+3. Select Availaible Region **closest to you**, I selected Mumbai
 
    ![AWS Lightsail Change Region](/static/images/ctfd/Change_zone.png)
 
@@ -54,6 +57,7 @@ Before starting, you should have:
 ---
 
 ## Step 2: Configure Networking in Lightsail
+
 1. Go to the **Networking** tab of your instance.
 2. Create static IP.
 3. Add firewall rules to allow all ports as We will be using Container Plugin for CTFd
@@ -70,27 +74,28 @@ Before starting, you should have:
 
 ---
 
-
 ## Step 3: Set Up Cloudflare DNS & SSL
+
 1. Buy a domain from a registrar such as [Hostinger](https://www.hostinger.com/).
 
    - I bought it from hostinger so I'll tell how I did so
-      - Go to the **Domains section** at Left Side Navbar 
-      - Click **Add new Domain**
+     - Go to the **Domains section** at Left Side Navbar
+     - Click **Add new Domain**
 
-   ![Get a Domain](/static/images/ctfd/get_domain.png) 
+   ![Get a Domain](/static/images/ctfd/get_domain.png)
 
-      - Enter your **desired domain** ( without .com/pk/etc ) and select from the options given to you.
+   - Enter your **desired domain** ( without .com/pk/etc ) and select from the options given to you.
 
    ![Select Desired Domain](/static/images/ctfd/domain_selection.png)
 
-      - Buy the domain and complete the billing process, You can pay through **Bank card** that allows **International Transactions** so make sure the card you use must **allow** one !
+   - Buy the domain and complete the billing process, You can pay through **Bank card** that allows **International Transactions** so make sure the card you use must **allow** one !
 
    - After payment, **Hostinger** will verify your purchase. Your domain will be ready to use within **24 hours**, and you will receive a confirmation email.
-   
+
    ![Confimation Mail](/static/images/ctfd/domain_finalized.png)
 
 2. Add your domain to **Cloudflare**.
+
    - Sign up to Cloudfare and map Connect your domain
 
    ![Connecting domain to Cloudfare](/static/images/ctfd/onboard_domain.png)
@@ -100,14 +105,15 @@ Before starting, you should have:
    ![Map Domain to Cloudfare](/static/images/ctfd/map_domain_cloudfare.png)
 
    - Copy the nameservers provided by Cloudflare and update them in the Hostinger DNS settings (Nameservers tab) for your domain.
-   
+
    ![Cloudfare Nameserver](/static/images/ctfd/cloudfare_nameserver.png)
-      
-      - Copy these nameservers and paste them in hostinger DNS nameserver
-   
+
+   - Copy these nameservers and paste them in hostinger DNS nameserver
+
    ![Hostinger Nameserver](/static/images/ctfd/hostinger_dnsserver.png)
 
 3. Create an **A record** pointing to your Lightsail static IP.
+
    - Check your static IP from the AWS Lightsail Instance and write it in place of **A record** at Cloudfare.
    - Make sure to Enable **Proxy (orange cloud)** for DDoS protection and caching.
 
@@ -117,30 +123,32 @@ Before starting, you should have:
 
    ![Cname Configure](/static/images/ctfd/Cname_Cloudfare.png)
 
-5. In SSL/TLS settings:
+4. In SSL/TLS settings:
+
    - Mode: **Flexible**
    - Enable **Always Use HTTPS**
 
    ![Cloudflare SSL Overview](/static/images/ctfd/cloudfare_ssl_overview.png)
 
-      - Click on Configure -> Scroll Down -> Select Flexible -> Save
+   - Click on Configure -> Scroll Down -> Select Flexible -> Save
 
    ![Cloudflare SSL Configure](/static/images/ctfd/cloudfare_ssl_configure.png)
-      
-      - On the Left side of Navbar **SSL/TLS** -> **Edge Certificates** 
-         - Scroll down untill you reach **Automatic HTTPS Rewrites** and Enable it
+
+   - On the Left side of Navbar **SSL/TLS** -> **Edge Certificates**
+     - Scroll down untill you reach **Automatic HTTPS Rewrites** and Enable it
 
    ![Cloudfare Automated HTTPS Rewrites](/static/images/ctfd/cloudfare_automated_https.png)
 
 ---
 
 ## Step 4: Connect to Lightsail Instance
+
 Download the Lightsail `.pem` key from the AWS console, then:
 
 ```bash
 chmod 400 LightsailDefaultKey.pem
 ssh -i "LightsailDefaultKey.pem" ubuntu@<Lightsail-IP>
-````
+```
 
 ![SSH Login to Lightsail](/static/images/ctfd/ssh-login.png)
 
@@ -236,10 +244,10 @@ docker run -d -p 3001:3000 web-chal1
 
 ## Step 9: Security
 
-* Restricted challenge ports to **Cloudflare’s IP ranges** only.
-* Disabled root login via SSH.
-* Kept only necessary services running.
-* Used Cloudflare **WAF rules** to block suspicious traffic.
+- Restricted challenge ports to **Cloudflare’s IP ranges** only.
+- Disabled root login via SSH.
+- Kept only necessary services running.
+- Used Cloudflare **WAF rules** to block suspicious traffic.
 
 ![Cloudflare WAF Rules](/static/images/ctfd/cloudflare-waf.png)
 
@@ -249,12 +257,13 @@ docker run -d -p 3001:3000 web-chal1
 
 1. Created categories in CTFd:
 
-   * Web
-   * Pwn
-   * Forensics
-   * Crypto
-   * Reversing
-   * Misc
+   - Web
+   - Pwn
+   - Forensics
+   - Crypto
+   - Reversing
+   - Misc
+
 2. Uploaded files and added flags.
 3. Enabled **Team Mode**.
 4. Used Discord & WhatsApp for player communication.
@@ -265,9 +274,9 @@ docker run -d -p 3001:3000 web-chal1
 
 ## Step 11: During the CTF
 
-* Monitored CTFd **scoreboard**.
-* Restarted Docker containers if any challenge failed.
-* Checked Cloudflare analytics for unusual traffic patterns.
+- Monitored CTFd **scoreboard**.
+- Restarted Docker containers if any challenge failed.
+- Checked Cloudflare analytics for unusual traffic patterns.
 
 ![CTFd Scoreboard](/static/images/ctfd/ctfd-scoreboard.png)
 
@@ -275,9 +284,9 @@ docker run -d -p 3001:3000 web-chal1
 
 ## Step 12: After the Event
 
-* Exported results from **CTFd Admin → Exports**.
-* Shared challenge write-ups with players.
-* Stopped or deleted unused Lightsail resources to avoid costs.
+- Exported results from **CTFd Admin → Exports**.
+- Shared challenge write-ups with players.
+- Stopped or deleted unused Lightsail resources to avoid costs.
 
 ![CTFd Export Results](/static/images/ctfd/ctfd-export.png)
 
@@ -285,20 +294,19 @@ docker run -d -p 3001:3000 web-chal1
 
 ## Lessons Learned
 
-* Lightsail was easier to set up than EC2 for small–medium events.
-* Dockerizing challenges saved time during deployment and debugging.
-* Cloudflare provided strong DDoS protection and easy SSL setup.
-* Always test challenges locally before deploying.
+- Lightsail was easier to set up than EC2 for small–medium events.
+- Dockerizing challenges saved time during deployment and debugging.
+- Cloudflare provided strong DDoS protection and easy SSL setup.
+- Always test challenges locally before deploying.
 
 ---
 
 ## References
 
-* [How to Host CTF](https://simulationcyber.com/how-to-host-ctfd-on-aws-lightsail/)
-* [CTFd Documentation](https://docs.ctfd.io/)
-* [AWS Lightsail Guide](https://lightsail.aws.amazon.com/ls/docs/)
-* [Cloudflare Documentation](https://developers.cloudflare.com/)
-* [Docker Documentation](https://docs.docker.com/)
+- [How to Host CTF](https://simulationcyber.com/how-to-host-ctfd-on-aws-lightsail/)
+- [CTFd Documentation](https://docs.ctfd.io/)
+- [AWS Lightsail Guide](https://lightsail.aws.amazon.com/ls/docs/)
+- [Cloudflare Documentation](https://developers.cloudflare.com/)
+- [Docker Documentation](https://docs.docker.com/)
 
 ---
-

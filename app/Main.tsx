@@ -11,7 +11,7 @@ export default function Home({ posts }) {
     <>
       <div className="divide-y divide-green-200 dark:divide-green-700">
         <div className="space-y-2 pt-6 pb-8 md:space-y-5">
-          <h1 className="text-3xl md:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600 animate-pulse">
+          <h1 className="animate-pulse bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent md:text-6xl">
             Latest
           </h1>
           <p className="text-lg leading-7 text-gray-500 dark:text-gray-400">
