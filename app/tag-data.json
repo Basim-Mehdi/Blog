@@ -1,4 +1,9 @@
 {
-  "testing": 2,
-  "features": 2
+  "ctf": 1,
+  "aws": 1,
+  "lightsail": 1,
+  "cloudflare": 1,
+  "docker": 1,
+  "ctfd": 1,
+  "writeup": 1
 }
