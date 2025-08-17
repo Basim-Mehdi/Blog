@@ -7,6 +7,26 @@ summary: A step-by-step guide to hosting your own Capture The Flag (CTF) event u
 ---
 
 
+## Table of Contents
+
+- [Introduction](#introduction-)
+- [Prerequisites](#prerequisites-)
+- [Step 1: Create AWS Lightsail Instance](#step-1-create-aws-lightsail-instance-)
+- [Step 2: Configure Networking in Lightsail](#step-2-configure-networking-in-lightsail-)
+- [Step 3: Set Up Cloudflare DNS & SSL](#step-3-set-up-cloudflare-dns--ssl-)
+- [Step 4: Connect to Lightsail Instance](#step-4-connect-to-lightsail-instance-)
+- [Step 5: Install Docker & Docker Compose](#step-5-install-docker--docker-compose-)
+- [Step 6: Install CTFd](#step-6-install-ctfd-)
+- [Step 7: Start CTFd](#step-7-start-ctfd-)
+- [Step 8: Deploying Container Plugin](#step-8-deploying-container-plugin-)
+- [Step 9: Shifting the CTFd Instance to Cloud](#step-9-shifting-the-ctfd-instance-to-cloud-)
+- [Step 10: Configuring and Deploying Containerized Challenges on Cloud](#step-10-configuring-and-deploying-containerized-challenges-on-cloud-)
+- [Step 11: Other CTFd Settings and Simple Challenge Deployement](#step-11-other-ctfd-settings-and-simple-challenge-deployement)
+- [Lessons Learned](#lessons-learned)
+- [References](#references)
+
+---
+
 ## **Introduction** 🚩
 
 Welcome to the wild world of CTF hosting! In this blog, I’ll share how I hosted my own Capture The Flag (CTF) competition **`C00K3D CTF- Batch Zero`** using **CTFd**, deployed on **AWS Lightsail**, secured with **Cloudflare**, and powered by **Dockerized challenge containers** for Web and Pwn categories.
