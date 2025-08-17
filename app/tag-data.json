@@ -1,9 +1,15 @@
 {
-  "ctf": 1,
+  "ctf": 2,
   "aws": 1,
   "lightsail": 1,
   "cloudflare": 1,
   "docker": 1,
   "ctfd": 1,
-  "writeup": 1
+  "writeup": 1,
+  "pwn": 1,
+  "ctftime": 1,
+  "overflow": 1,
+  "ret2libc": 1,
+  "plt": 1,
+  "pwntools": 1
 }

