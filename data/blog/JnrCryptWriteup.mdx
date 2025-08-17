@@ -92,7 +92,6 @@ void func(void)
 }
 ```
 
-
 > This confirms that we can overflow the `32`-byte buffer since `read` allows `128` bytes.
 
         ![Binary Analysis Screenshot](/static/images/JuniorCrypt/decompiled_func.png)
@@ -129,7 +128,6 @@ Offset to RIP: 40 bytes
 
 ## Step 3: Preparing ROP Gadgets
 
-
 We need a **`pop rdi; ret` gadget** to control the first argument (`RDI`) for function calls on `x86_64`:
 
     - I used ROPgadget to find the gadget:
@@ -144,14 +142,12 @@ ROPgadget --binary KindAuthor | grep "pop rdi"
 pop_rdi = 0x000000000040114a
 ```
 
-
 * This will pop out anything in `RDI` and allow us to control the first argument of any function we call.
 * We can pass the address of `puts` for leaking `libc`.
 
 ---
 
 ## Step 4: Leaking libc Address
-
 
 To compute `libc` base, we leak `puts` address from the `GOT`:
 
@@ -214,7 +210,6 @@ ROPgadget --binary KindAuthor | grep "ret"
 
 ![Ret Gadget](/static/images/JuniorCrypt/ret_ROP.png)
 
-
     - So we can calculate the `libc` base from known offsets and then use it to find the addresses of `system` and `/bin/sh`:
 
 ```python
@@ -244,7 +239,6 @@ io.interactive()
 ---
 
 ## Step 7: Exploitation and Flag
-
 
 Our complete final payload is:
 
@@ -300,7 +294,6 @@ grodno {bL491M1_N4M3R3n1Y4m1_VYm05ch3n4_d0R094_v_5h31L}
 
 ## Conclusion
 
-
 * The challenge used a **classic buffer overflow** with **`ret2libc` exploitation**.
 * **No PIE**, **NX enabled**, and **no canary** made it straightforward.
 * **Step-by-step approach:**
@@ -312,7 +305,6 @@ grodno {bL491M1_N4M3R3n1Y4m1_VYm05ch3n4_d0R094_v_5h31L}
     4. **Calculate libc base**
     5. **Build final ROP chain**
     6. **Spawn shell and read flag**
-
 
 > This writeup demonstrates a clean **beginner-friendly `ret2libc` exploitation workflow**.
 
