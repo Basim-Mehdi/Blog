@@ -7,10 +7,9 @@ interface Project {
 
 const projectsData: Project[] = [
   {
-    title: 'Working on them :)',
-    description: `Stay Tuned :)`,
-    // imgSrc: '/static/images/google.png',
-    href: '',
+    title: 'JuniorCrypt Writeup',
+    description: 'A detailed write-up of the ret2libc exploit technique, including its application in Capture The Flag (CTF) challenges.',
+    href: '/blog/JnrCryptWriteup',
   },
   // {
   //   title: 'The Time Machine',

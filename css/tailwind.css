@@ -6,35 +6,50 @@
 
 /* Core theme configuration */
 @theme {
+  /* Backgrounds for light/dark modes */
+  --color-bg-light: #f8fafc;
+  --color-bg-dark: #18181b;
+
+  /* Accent color for highlights */
+  --color-accent: #fb7185;
+
+  /* Card/modal backgrounds */
+  --color-card-light: #fff7f8;
+  --color-card-dark: #2a0a12;
+
+  /* Border and shadow for soft look */
+  --color-border: #fecdd3;
+  --shadow-soft: 0 2px 8px 0 rgba(244,63,94,0.08);
   /* Font families */
   --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
   /* Colors */
-  /* Copied from https://tailwindcss.com/docs/theme#default-theme-variable-reference */
-  --color-primary-50: oklch(0.971 0.014 343.198);
-  --color-primary-100: oklch(0.948 0.028 342.258);
-  --color-primary-200: oklch(0.899 0.061 343.231);
-  --color-primary-300: oklch(0.823 0.12 346.018);
-  --color-primary-400: oklch(0.718 0.202 349.761);
-  --color-primary-500: oklch(0.656 0.241 354.308);
-  --color-primary-600: oklch(0.592 0.249 0.584);
-  --color-primary-700: oklch(0.525 0.223 3.958);
-  --color-primary-800: oklch(0.459 0.187 3.815);
-  --color-primary-900: oklch(0.408 0.153 2.432);
-  --color-primary-950: oklch(0.284 0.109 3.907);
+  /* Tailwind Red color scale */
+  --color-primary-50: #fef2f2;
+  --color-primary-100: #fee2e2;
+  --color-primary-200: #fecaca;
+  --color-primary-300: #fca5a5;
+  --color-primary-400: #f87171;
+  --color-primary-500: #ef4444;
+  --color-primary-600: #dc2626;
+  --color-primary-700: #b91c1c;
+  --color-primary-800: #991b1b;
+  --color-primary-900: #7f1d1d;
+  --color-primary-950: #450a0a;
 
-  --color-gray-50: oklch(0.985 0.002 247.839);
-  --color-gray-100: oklch(0.967 0.003 264.542);
-  --color-gray-200: oklch(0.928 0.006 264.531);
-  --color-gray-300: oklch(0.872 0.01 258.338);
-  --color-gray-400: oklch(0.707 0.022 261.325);
-  --color-gray-500: oklch(0.551 0.027 264.364);
-  --color-gray-600: oklch(0.446 0.03 256.802);
-  --color-gray-700: oklch(0.373 0.034 259.733);
-  --color-gray-800: oklch(0.278 0.033 256.848);
-  --color-gray-900: oklch(0.21 0.034 264.665);
-  --color-gray-950: oklch(0.13 0.028 261.692);
+  /* Red-tinted grays for a 'failure' theme */
+  --color-gray-50: #fff1f2;
+  --color-gray-100: #ffe4e6;
+  --color-gray-200: #fecdd3;
+  --color-gray-300: #fda4af;
+  --color-gray-400: #fb7185;
+  --color-gray-500: #f43f5e;
+  --color-gray-600: #e11d48;
+  --color-gray-700: #be123c;
+  --color-gray-800: #881337;
+  --color-gray-900: #4c0519;
+  --color-gray-950: #1f0107;
 
   /* Line heights */
   --line-height-11: 2.75rem;
@@ -57,6 +72,25 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
+  body {
+    background: var(--color-bg-light);
+    color: var(--color-gray-900);
+    transition: background 0.3s;
+  }
+  .dark body {
+    background: var(--color-bg-dark);
+    color: var(--color-gray-100);
+  }
+
+  a, button, input, textarea, select {
+    transition: box-shadow 0.2s, border-color 0.2s, background 0.2s;
+  }
+
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px var(--color-accent);
+  }
   *,
   ::after,
   ::before,
@@ -79,6 +113,23 @@
 }
 
 @layer utilities {
+  .card, .modal {
+    background: var(--color-card-light);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-soft);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+  .dark .card, .dark .modal {
+    background: var(--color-card-dark);
+    border-color: var(--color-primary-950);
+  }
+
+  .accent {
+    color: var(--color-accent);
+  }
+
   .prose {
     & a {
       color: var(--color-primary-500);
