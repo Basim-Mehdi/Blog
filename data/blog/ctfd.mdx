@@ -6,7 +6,6 @@ draft: false
 summary: A step-by-step guide to hosting your own Capture The Flag (CTF) event using CTFd, AWS Lightsail, Cloudflare, and Dockerized challenges.
 ---
 
-
 ## Table of Contents
 
 - [Introduction](#introduction-)
@@ -37,7 +36,6 @@ Welcome to the wild world of CTF hosting! In this blog, I’ll share how I hoste
 
 ---
 
-
 - An **AWS account** and familiarity with the **Lightsail** service for deploying virtual servers.
 - A **domain name** (can be managed via **Cloudflare**) and a basic understanding of **DNS management**.
 - Basic knowledge of **Linux** commands and how to use **Docker** for containerization.
@@ -65,7 +63,6 @@ Before you dive in, make sure you have:
 ---
 
 ## Step 1: Create AWS Lightsail Instance ⚡
-
 
 1. Sign in to the **AWS Lightsail console**.
 2. Click **Create Instance**.
@@ -116,8 +113,8 @@ Before you dive in, make sure you have:
 1. Buy a domain from a registrar such as [**Hostinger**](https://www.hostinger.com/).
 
    - I bought it from **Hostinger**, so here's how you can join the club:
-       - Go to the **Domains** section in the left sidebar.
-       - Click **Add new Domain**.
+     - Go to the **Domains** section in the left sidebar.
+     - Click **Add new Domain**.
 
    ![Get a Domain](/static/images/ctfd/get_domain.png)
 
@@ -175,8 +172,8 @@ Before you dive in, make sure you have:
 
    ![Cloudflare SSL Configure](/static/images/ctfd/cloudfare_ssl_configure.png)
 
-    - On the left side of the navbar, go to **SSL/TLS** → **Edge Certificates**.
-       - Scroll down until you reach **Automatic HTTPS Rewrites** and enable it (because, yes, you want everything to be HTTPS by default).
+   - On the left side of the navbar, go to **SSL/TLS** → **Edge Certificates**.
+     - Scroll down until you reach **Automatic HTTPS Rewrites** and enable it (because, yes, you want everything to be HTTPS by default).
 
    ![Cloudfare Automated HTTPS Rewrites](/static/images/ctfd/cloudfare_automated_https.png)
 
@@ -186,21 +183,18 @@ Before you dive in, make sure you have:
 
 Download the Lightsail **`.pem` key** from the **AWS console** (don’t lose it!), then:
 
-   ![SSH Login to Lightsail](/static/images/ctfd/ssh_key.png)
-
+![SSH Login to Lightsail](/static/images/ctfd/ssh_key.png)
 
 ```bash
 chmod 400 `LightsailDefaultKey.pem`
 ssh -i `LightsailDefaultKey.pem` ubuntu@<Lightsail-StaticIP>
 ```
 
-   ![SSH Login to Lightsail](/static/images/ctfd/aws_ssh.png)
+![SSH Login to Lightsail](/static/images/ctfd/aws_ssh.png)
 
 ---
 
 ## Step 5: Install Docker & Docker Compose 🐳
-
-
 
 ```bash
 sudo apt update && sudo apt upgrade -y
@@ -225,7 +219,6 @@ docker-compose --version
 
 Clone the repository on your local system (because copy-pasting code from Stack Overflow only gets you so far):
 
-
 ```bash
 git clone https://github.com/CTFd/CTFd.git
 cd CTFd
@@ -237,26 +230,25 @@ cd CTFd
 
 ## Step 7: Start CTFd 🚀
 
-   - Make sure you are in the **CTFd** directory where the `Dockerfile` is located.
-
+- Make sure you are in the **CTFd** directory where the `Dockerfile` is located.
 
 ```bash
 sudo docker-compose up # testing it locally
 ```
 
-   ![CTFd Running in Docker](/static/images/ctfd/ctfd-running.png)
+![CTFd Running in Docker](/static/images/ctfd/ctfd-running.png)
 
-   - At `0.0.0.0:8000` you can see the **CTFd** instance running (if not, check your Docker logs and pray 🙏).
+- At `0.0.0.0:8000` you can see the **CTFd** instance running (if not, check your Docker logs and pray 🙏).
 
-   ![CTFd on Web](/static/images/ctfd/ctfd-web.png)
+![CTFd on Web](/static/images/ctfd/ctfd-web.png)
 
-   - Set up according to your needs and make sure you remember the **admin** credentials (write them down, you will forget otherwise).
+- Set up according to your needs and make sure you remember the **admin** credentials (write them down, you will forget otherwise).
+
 ---
 
 ## Step 8: Deploying Container Plugin 🧩
 
-   - Modify the `docker-compose.yml` **volumes** section for the **Container Plugin** (yes, you really need that Docker socket):
-
+- Modify the `docker-compose.yml` **volumes** section for the **Container Plugin** (yes, you really need that Docker socket):
 
 ```yaml
 services:
@@ -268,191 +260,184 @@ services:
          ...
 ```
 
-   - Clone the **Container Plugin** repository:
-
+- Clone the **Container Plugin** repository:
 
 ```bash
 git clone https://github.com/TheFlash2k/containers.git
 mv containers /path/to/CTFd/plugins/
 ```
-   ![CTFd Container](/static/images/ctfd/ctfd-container.png)
 
-   - Now run the **CTFd** instance again:
+![CTFd Container](/static/images/ctfd/ctfd-container.png)
 
+- Now run the **CTFd** instance again:
 
 ```bash
 sudo docker-compose up
 ```
 
-   - Make sure you login with **Admin** account that you previously Created.
-   - Go to Admin Panel -> Plugins and Click on **Containers**.
+- Make sure you login with **Admin** account that you previously Created.
+- Go to Admin Panel -> Plugins and Click on **Containers**.
 
-   ![Click Container Plugin](/static/images/ctfd/container-plugin-click.png)
+![Click Container Plugin](/static/images/ctfd/container-plugin-click.png)
 
-   - Now go to settings and configure the plugin by entering valid details.
-         - **Docker Socket Path**: `/var/run/docker.sock`
-         - **Hostname**: `localhost or the IP of your instance`
-         - Let all other settings default or as I set them.
+- Now go to settings and configure the plugin by entering valid details. - **Docker Socket Path**: `/var/run/docker.sock` - **Hostname**: `localhost or the IP of your instance` - Let all other settings default or as I set them.
 
-   ![Container Docker Config](/static/images/ctfd/container-docker-config.png)
-         
+![Container Docker Config](/static/images/ctfd/container-docker-config.png)
+
          - Click Save and you should see a success message **Docker Connected**.
 
-   - Now you can add challenges using the **Container Plugin** (finally, the fun part!):
-      - Go to **Challenges** in the **Admin Panel** and click **+** to create a challenge.
-      - On the options shown at the right side, click on **container**.
-         ![Container Challenge Create](/static/images/ctfd/chall-create-docker.png)
-      - Fill in the required details.
-   - **Prerequisite:** A built Docker image for the challenge (if you skipped this, go back).
-         ![Container Challenge image](/static/images/ctfd/chall-docker-run.png)
-   - Make sure the `Port` you specify is **exposed** in the `Dockerfile` of the challenge.
-      - For instance, in my web challenge I exposed port `5000` in my `Dockerfile`, so I'll use `5000` in the **Port** option (match your ports or face the wrath of connection errors 🔥).
-         ![Container Challenge Config](/static/images/ctfd/my-docker-file.png)
+- Now you can add challenges using the **Container Plugin** (finally, the fun part!):
+  - Go to **Challenges** in the **Admin Panel** and click **+** to create a challenge.
+  - On the options shown at the right side, click on **container**.
+    ![Container Challenge Create](/static/images/ctfd/chall-create-docker.png)
+  - Fill in the required details.
+- **Prerequisite:** A built Docker image for the challenge (if you skipped this, go back).
+  ![Container Challenge image](/static/images/ctfd/chall-docker-run.png)
+- Make sure the `Port` you specify is **exposed** in the `Dockerfile` of the challenge.
 
-         ![Container Challenge Final](/static/images/ctfd/my-docker-chall.png)
+  - For instance, in my web challenge I exposed port `5000` in my `Dockerfile`, so I'll use `5000` in the **Port** option (match your ports or face the wrath of connection errors 🔥).
+    ![Container Challenge Config](/static/images/ctfd/my-docker-file.png)
 
-   - Click on **Create** and enter the **Flag**
-      - **State** → `Visible` (because invisible challenges are only fun for you, not the players).
+    ![Container Challenge Final](/static/images/ctfd/my-docker-chall.png)
 
-         ![Container Challenge Flag](/static/images/ctfd/my-docker-flag.png)
+- Click on **Create** and enter the **Flag**
 
-   - Click **Finish** (the challenge should be deployed successfully—if not, double-check your Docker setup).
-   - You can verify it by going to **Challenges** in the **Admin Panel**; you should see your challenge listed there (if not, time to debug 🕵️‍♂️).
+  - **State** → `Visible` (because invisible challenges are only fun for you, not the players).
 
-      ![Container Challenge List](/static/images/ctfd/my-docker-chall-list.png)
+    ![Container Challenge Flag](/static/images/ctfd/my-docker-flag.png)
 
-   - **Verify** the container plugin is working successfully:
-      - Exit the **Admin Panel**
-      - Go to the **main page** and click on the **challenge** you created.
-      - You should see the challenge description and a **button** to start the challenge (if not, you know the drill: debug).
+- Click **Finish** (the challenge should be deployed successfully—if not, double-check your Docker setup).
+- You can verify it by going to **Challenges** in the **Admin Panel**; you should see your challenge listed there (if not, time to debug 🕵️‍♂️).
 
-      ![Docker Chall Checking](/static/images/ctfd/docker-chall.png)
+  ![Container Challenge List](/static/images/ctfd/my-docker-chall-list.png)
 
-            - Click on **Initiate Suffering** (yes, that's really what it's called).
-            - You will be allocated a separate instance at a unique port ⚡ (because everyone deserves their own Docker pain).
+- **Verify** the container plugin is working successfully:
 
-   ![Docker Chall Working](/static/images/ctfd/docker-chall-work.png)
-   ![Docker Chall Working Image](/static/images/ctfd/docker-working-fine.png)
-      - **Congrats!** The plugin is working superbly ⚡😎 (go ahead, brag a little).
+  - Exit the **Admin Panel**
+  - Go to the **main page** and click on the **challenge** you created.
+  - You should see the challenge description and a **button** to start the challenge (if not, you know the drill: debug).
+
+  ![Docker Chall Checking](/static/images/ctfd/docker-chall.png)
+
+         - Click on **Initiate Suffering** (yes, that's really what it's called).
+         - You will be allocated a separate instance at a unique port ⚡ (because everyone deserves their own Docker pain).
+
+![Docker Chall Working](/static/images/ctfd/docker-chall-work.png)
+![Docker Chall Working Image](/static/images/ctfd/docker-working-fine.png) - **Congrats!** The plugin is working superbly ⚡😎 (go ahead, brag a little).
 
 ## Step 9: Shifting the CTFd Instance to Cloud ☁️
 
-   - **Zip** the `CTFd` directory on your local machine:
-
+- **Zip** the `CTFd` directory on your local machine:
 
 ```bash
 sudo zip -r ctfd.zip /path/to/CTFd
 ```
 
-   - Upload the `ctfd.zip` file to your cloud server.
-
+- Upload the `ctfd.zip` file to your cloud server.
 
 ```bash
 sudo scp -i /path/to/your/key ctfd.zip user@your-cloud-server:/path/to/destination
 ```
 
-   ![Moving to Cloud](/static/images/ctfd/moving-to-cloud.png)
+![Moving to Cloud](/static/images/ctfd/moving-to-cloud.png)
 
-   - Verify on cloud and unzip the `ctfd.zip` file:
-
+- Verify on cloud and unzip the `ctfd.zip` file:
 
 ```bash
 ls
 sudo unzip ctfd.zip
 ```
 
-   ![Verifying](/static/images/ctfd/verifying.png)
-   - Make sure **nginx** is not running (because port conflicts are a rite of passage):
-      - Stop the **nginx** service if it is running:
-      ```bash
-      sudo systemctl stop nginx
-      ```
-   - Navigate to the `CTFd` directory:
-   - Run the instance:
+![Verifying](/static/images/ctfd/verifying.png)
 
+- Make sure **nginx** is not running (because port conflicts are a rite of passage):
+  - Stop the **nginx** service if it is running:
+  ```bash
+  sudo systemctl stop nginx
+  ```
+- Navigate to the `CTFd` directory:
+- Run the instance:
 
 ```bash
 sudo docker-compose up -d
 ```
 
-   ![CTFd Running on Cloud](/static/images/ctfd/ctfd-running-cloud.png)
+![CTFd Running on Cloud](/static/images/ctfd/ctfd-running-cloud.png)
 
-   - Now you can access the **CTFd** instance via your browser through the **static IP** of your cloud server,
-   - Or through the **domain** you configured with **Cloudflare** (and yes, it should actually work now).
+- Now you can access the **CTFd** instance via your browser through the **static IP** of your cloud server,
+- Or through the **domain** you configured with **Cloudflare** (and yes, it should actually work now).
 
-   ![CTFd Domain](/static/images/ctfd/ctfd-domain-working.png)
+![CTFd Domain](/static/images/ctfd/ctfd-domain-working.png)
 
 ---
 
 ## Step 10: Configuring and Deploying Containerized Challenges on Cloud 🛠️
 
-   - In the **Admin Panel** → **Plugins** → **Containers**:
-      - Set the **Hostname** to a **subdomain** you configured earlier in **Cloudflare** that has no proxy enabled.
-      - Leave all other settings as they are.
-      - Click **Submit**.
+- In the **Admin Panel** → **Plugins** → **Containers**:
+  - Set the **Hostname** to a **subdomain** you configured earlier in **Cloudflare** that has no proxy enabled.
+  - Leave all other settings as they are.
+  - Click **Submit**.
 
-   ![Cloud Plugin Config](/static/images/ctfd/Plugin_Config_Cloud.png)
+![Cloud Plugin Config](/static/images/ctfd/Plugin_Config_Cloud.png)
 
-   - Now Bring the challenges that works on Docker to Cloud in a similar way we brought the ctfd.zip file.
-         - Zip the `challenge` directory on your local machine:
-         ```bash
-         sudo zip -r challenge.zip /path/to/challenge
-         ```
-         - Bring it to the **cloud** through `scp`:
-         ```bash
-         sudo scp -i /path/to/your/key challenge.zip user@your-cloud-server:/path/to/destination
-         ```
-   ![Cloud Chall Movement](/static/images/ctfd/Chall_Movement.png)
+- Now Bring the challenges that works on Docker to Cloud in a similar way we brought the ctfd.zip file. - Zip the `challenge` directory on your local machine:
+  `bash
+      sudo zip -r challenge.zip /path/to/challenge
+      ` - Bring it to the **cloud** through `scp`:
+  `bash
+      sudo scp -i /path/to/your/key challenge.zip user@your-cloud-server:/path/to/destination
+      `
+  ![Cloud Chall Movement](/static/images/ctfd/Chall_Movement.png)
 
-         - Build the Docker image on the cloud server:
-         ```bash
-         cd /path/to/destination
-         sudo docker build -t challenge-image .
-         ```
-   ![Cloud Chall Build](/static/images/ctfd/Chall_Build.png)
+        - Build the Docker image on the cloud server:
+        ```bash
+        cd /path/to/destination
+        sudo docker build -t challenge-image .
+        ```
 
-         - Go to the challenge in CTFd Admin Panel and verify the container settings.
-               - Make sure the **Image** is set to `challenge-image`.
-               - Click **Update/Submit**.
+  ![Cloud Chall Build](/static/images/ctfd/Chall_Build.png)
 
-   ![Cloud Chall Config](/static/images/ctfd/image_update.png)
+        - Go to the challenge in CTFd Admin Panel and verify the container settings.
+              - Make sure the **Image** is set to `challenge-image`.
+              - Click **Update/Submit**.
+
+![Cloud Chall Config](/static/images/ctfd/image_update.png)
 
          - Now you can test the challenge by clicking on the **Initiate Suffering** button (because nothing says "fun" like a little suffering).
          - If everything is set up correctly, you should be able to access the challenge at the specified domain and port (if not, check your firewall, DNS, and Docker—again).
 
-   ![Cloud Chall Test](/static/images/ctfd/Chall_Test_Cloud.png)
+![Cloud Chall Test](/static/images/ctfd/Chall_Test_Cloud.png)
 
 ### **Note:** Similar settings apply for other challenges that need `nc`. Just set the **Connection type** to `TCP`.
-   - Make sure the challenge `Dockerfile` exposes the **same port** you specify in **CTFd** (consistency is key, unless you like debugging).
+
+- Make sure the challenge `Dockerfile` exposes the **same port** you specify in **CTFd** (consistency is key, unless you like debugging).
 
 ---
 
 ## Step 11: Other CTFd Settings and Simple Challenge Deployement:
 
+- Configure any additional settings in the **CTFd Admin Panel** as needed (because there’s always one more setting).
+- For simple challenges, you can use the built-in challenge types and templates provided by **CTFd**.
+  - You can use either **Standard** or **Dynamic** templates (pick your poison).
+- You can access the **CTFd** instance at `http://your-cloud-server-static-ip` from anywhere and deploy challenges easily.
+- You can customize the **CTFd** home page by modifying the HTML/CSS files in the `CTFd` directory or directly through the **Admin Panel**.
+  - Go to **Pages** → **All Pages** (you can edit `index` to customize the home page)
+  - Edit or create the desired page and make your changes.
+  - Save and preview your changes (and hope you didn’t break the layout).
 
-   - Configure any additional settings in the **CTFd Admin Panel** as needed (because there’s always one more setting).
-   - For simple challenges, you can use the built-in challenge types and templates provided by **CTFd**.
-      - You can use either **Standard** or **Dynamic** templates (pick your poison).
-   - You can access the **CTFd** instance at `http://your-cloud-server-static-ip` from anywhere and deploy challenges easily.
-   - You can customize the **CTFd** home page by modifying the HTML/CSS files in the `CTFd` directory or directly through the **Admin Panel**.
-      - Go to **Pages** → **All Pages** (you can edit `index` to customize the home page)
-      - Edit or create the desired page and make your changes.
-      - Save and preview your changes (and hope you didn’t break the layout).
+![CTFd Page Edit](/static/images/ctfd/ctfd-page-edit.png)
+![CTFd Page Preview](/static/images/ctfd/ctfd-page-preview.png)
 
-   ![CTFd Page Edit](/static/images/ctfd/ctfd-page-edit.png)
-   ![CTFd Page Preview](/static/images/ctfd/ctfd-page-preview.png)
+- You can also configure things in the **CTFd Admin Panel** → **Config**:
+  - **Logo**
+  - **Theme**
+  - **Start and End Time** of CTF
+  - **Visibility Settings** (Challenges/Accounts/Scoreboard)
+  - **Pause the CTF** (for when you need a break, or just want to mess with your players 😏)
 
+![CTFd Config](/static/images/ctfd/ctfd-config.png)
 
-   - You can also configure things in the **CTFd Admin Panel** → **Config**:
-      - **Logo**
-      - **Theme**
-      - **Start and End Time** of CTF
-      - **Visibility Settings** (Challenges/Accounts/Scoreboard)
-      - **Pause the CTF** (for when you need a break, or just want to mess with your players 😏)
-
-   ![CTFd Config](/static/images/ctfd/ctfd-config.png)
-
-## Lessons Learned 
+## Lessons Learned
 
 - **Lightsail** was easier to set up than **EC2** for small–medium events (sorry, EC2 fans).
 - **Dockerizing** challenges saved time during deployment and debugging (and saved my sanity).

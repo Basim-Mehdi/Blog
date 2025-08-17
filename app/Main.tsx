@@ -9,16 +9,16 @@ const MAX_DISPLAY = 5
 export default function Home({ posts }) {
   return (
     <>
-  <div className="divide-y divide-primary-200 dark:divide-primary-700">
+      <div className="divide-primary-200 dark:divide-primary-700 divide-y">
         <div className="space-y-2 pt-6 pb-8 md:space-y-5">
-          <h1 className="animate-pulse bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent md:text-6xl">
+          <h1 className="from-primary-600 to-primary-800 animate-pulse bg-gradient-to-r bg-clip-text text-3xl font-extrabold tracking-tight text-transparent md:text-6xl">
             Latest
           </h1>
           <p className="text-lg leading-7 text-gray-800 dark:text-white">
             {siteMetadata.description}
           </p>
         </div>
-  <ul className="divide-y divide-primary-100 dark:divide-primary-900">
+        <ul className="divide-primary-100 dark:divide-primary-900 divide-y">
           {!posts.length && 'No posts found.'}
           {posts.slice(0, MAX_DISPLAY).map((post) => {
             const { slug, date, title, summary, tags } = post
@@ -28,7 +28,7 @@ export default function Home({ posts }) {
                   <div className="space-y-2 xl:grid xl:grid-cols-4 xl:items-baseline xl:space-y-0">
                     <dl>
                       <dt className="sr-only">Published on</dt>
-                      <dd className="text-base leading-6 font-medium text-white-600 dark:text-white-400">
+                      <dd className="text-white-600 dark:text-white-400 text-base leading-6 font-medium">
                         <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
                       </dd>
                     </dl>
@@ -45,7 +45,11 @@ export default function Home({ posts }) {
                           </h2>
                           <div className="flex flex-wrap">
                             {tags.map((tag) => (
-                              <Tag key={tag} text={tag} className="text-red-700 dark:text-red-400 mr-3" />
+                              <Tag
+                                key={tag}
+                                text={tag}
+                                className="mr-3 text-red-700 dark:text-red-400"
+                              />
                             ))}
                           </div>
                         </div>
@@ -56,7 +60,7 @@ export default function Home({ posts }) {
                       <div className="text-base leading-6 font-medium">
                         <Link
                           href={`/blog/${slug}`}
-                          className="text-red-700 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                          className="text-red-700 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                           aria-label={`Read more: "${title}"`}
                         >
                           Read more &rarr;

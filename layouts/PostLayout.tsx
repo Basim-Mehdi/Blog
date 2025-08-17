@@ -98,7 +98,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
               <div className="pt-6 pb-6 text-sm">
                 <Link
                   href={siteMetadata.twitter ?? 'https://twitter.com/'}
-                  className="text-gray-900 dark:text-white hover:underline"
+                  className="text-gray-900 hover:underline dark:text-white"
                   target="_blank"
                   rel="noopener noreferrer nofollow"
                 >
@@ -107,7 +107,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
                 {` • `}
                 <Link
                   href={siteMetadata.github ?? 'https://github.com/'}
-                  className="text-gray-900 dark:text-white hover:underline"
+                  className="text-gray-900 hover:underline dark:text-white"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -132,7 +132,11 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
                     </h2>
                     <div className="flex flex-wrap">
                       {tags.map((tag) => (
-                        <Tag key={tag} text={tag} className="text-red-700 dark:text-white hover:text-red-800 dark:hover:text-white mr-3" />
+                        <Tag
+                          key={tag}
+                          text={tag}
+                          className="mr-3 text-red-700 hover:text-red-800 dark:text-white dark:hover:text-white"
+                        />
                       ))}
                     </div>
                   </div>
@@ -165,7 +169,7 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
               <div className="pt-4 xl:pt-8">
                 <Link
                   href={`/${basePath}`}
-                  className="text-red-700 dark:text-white hover:text-red-800 dark:hover:text-white"
+                  className="text-red-700 hover:text-red-800 dark:text-white dark:hover:text-white"
                   aria-label="Back to the blog"
                 >
                   &larr; Back to the blog

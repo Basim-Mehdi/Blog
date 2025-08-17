@@ -95,7 +95,7 @@ export default function ListLayoutWithTags({
               ) : (
                 <Link
                   href={`/blog`}
-                  className="font-bold text-gray-900 uppercase dark:text-white hover:text-red-700 dark:hover:text-red-400"
+                  className="font-bold text-gray-900 uppercase hover:text-red-700 dark:text-white dark:hover:text-red-400"
                 >
                   All Posts
                 </Link>
@@ -111,7 +111,7 @@ export default function ListLayoutWithTags({
                       ) : (
                         <Link
                           href={`/tags/${slug(t)}`}
-                          className="px-3 py-2 text-sm font-medium text-gray-700 uppercase dark:text-white hover:text-red-700 dark:hover:text-red-400"
+                          className="px-3 py-2 text-sm font-medium text-gray-700 uppercase hover:text-red-700 dark:text-white dark:hover:text-red-400"
                           aria-label={`View posts tagged ${t}`}
                         >
                           {`${t} (${tagCounts[t]})`}
@@ -147,7 +147,11 @@ export default function ListLayoutWithTags({
                           </h2>
                           <div className="flex flex-wrap">
                             {tags?.map((tag) => (
-                              <Tag key={tag} text={tag} className="text-red-700 dark:text-red-400 mr-3 text-sm font-medium uppercase" />
+                              <Tag
+                                key={tag}
+                                text={tag}
+                                className="mr-3 text-sm font-medium text-red-700 uppercase dark:text-red-400"
+                              />
                             ))}
                           </div>
                         </div>

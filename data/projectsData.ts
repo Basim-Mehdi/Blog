@@ -8,7 +8,8 @@ interface Project {
 const projectsData: Project[] = [
   {
     title: 'JuniorCrypt Writeup',
-    description: 'A detailed write-up of the ret2libc exploit technique, including its application in Capture The Flag (CTF) challenges.',
+    description:
+      'A detailed write-up of the ret2libc exploit technique, including its application in Capture The Flag (CTF) challenges.',
     href: '/blog/JnrCryptWriteup',
   },
   // {
