@@ -98,10 +98,9 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
               <div className="pt-6 pb-6 text-sm">
                 <Link
                   href={siteMetadata.twitter ?? 'https://twitter.com/'}
-                  rel="nofollow"
                   className="text-gray-900 dark:text-white hover:underline"
                   target="_blank"
-                  rel="noopener noreferrer"
+                  rel="noopener noreferrer nofollow"
                 >
                   Discuss on Twitter
                 </Link>
