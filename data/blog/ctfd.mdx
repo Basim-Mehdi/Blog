@@ -380,13 +380,15 @@ sudo docker-compose up -d
 
 ![Cloud Plugin Config](/static/images/ctfd/Plugin_Config_Cloud.png)
 
-- Now Bring the challenges that works on Docker to Cloud in a similar way we brought the ctfd.zip file. - Zip the `challenge` directory on your local machine:
-  `bash
+- Now Bring the challenges that works on Docker to Cloud in a similar way we brought the ctfd.zip file.
+      - Zip the `challenge` directory on your local machine:
+  ```bash
       sudo zip -r challenge.zip /path/to/challenge
-      ` - Bring it to the **cloud** through `scp`:
-  `bash
+  ```
+      - Bring it to the **cloud** through `scp`:
+  ```bash
       sudo scp -i /path/to/your/key challenge.zip user@your-cloud-server:/path/to/destination
-      `
+  ```
   ![Cloud Chall Movement](/static/images/ctfd/Chall_Movement.png)
 
         - Build the Docker image on the cloud server:
