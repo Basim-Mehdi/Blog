@@ -18,22 +18,22 @@ summary: Writeups for the PWN challenges that I made for the C00K3D CTF - Final 
 
 ####    - Challenge Description
 
-            - Prove your **authenticity** and get the secret document.
+            - **Prove your `authenticity` and get the secret document.**
 
 ####   - Solution / Approach:
-            - No binary was provided with this challenge but a link to a remote server.
+            - **No binary** was provided with this challenge but a link to a remote server.
             - Connecting to the server with netcat gives a menu with 5 options.
-                    - 1. Access NOVA AI Core
-                    - 2. View Anomaly logs
-                    - 3. Attempt Override Protocol
-                    - 4. Run System Diagnostics
-                    - 5. Disconnect
-            - We had to select option 1 to access the NOVA AI Core.
-            - The AI core prompts for an authentication passphrase 
-            - So we just smash the input with a lot of characters and we get a buffer overflow.
-            - Then it asks for a 6 digit token 
-            - just pass the 6 digit token as 123456
-            - And we get the flag.
+                    - `1. Access NOVA AI Core`
+                    - `2. View Anomaly logs`
+                    - `3. Attempt Override Protocol`
+                    - `4. Run System Diagnostics`
+                    - `5. Disconnect`
+            - We had to select **option** `1` to access the **NOVA AI Core**.
+            - The AI core **prompts** for an `authentication passphrase`. 
+            - So we just smash the `input` with a lot of characters and we get a `buffer overflow`.
+            - Then it asks for a `6` **digit token**.
+            - just pass the `6` digit token as `123456`
+            - And we get the **flag**.
 
 #### - Solve
 
@@ -44,14 +44,14 @@ summary: Writeups for the PWN challenges that I made for the C00K3D CTF - Final 
 
 ####    - Challenge Description
 
-            - Infilitrate through the buggy firewall to access root permissions
+            - **Infilitrate through the buggy firewall to access root permissions**
 
 ####   - Solution / Approach:
 
-            - We were given a binary (chall) vulnerable to buffer overflow.
-            - After a little analysis we can see that it has a system("/bin/sh") call inside a function
-            - We can simply overflow the buffer and overwrite the return address to point to that function.
-            - The binary is not protected by NX, PIE or Canary so it's a straightforward exploit.
+            - We were given a **binary** (chall) **vulnerable** to `buffer overflow`.
+            - After a little analysis we can see that it has a `system("/bin/sh")` call inside a **function**.
+            - We can simply `overflow` the buffer and **overwrite** the `return address` to point to that function.
+            - The binary is not **protected** by `NX`, `PIE` or `Canary` so it's a straightforward exploit.
 
 #### Script
 
@@ -83,7 +83,7 @@ io.interactive()
 ## C00K3D Kitchen
 ####    - Challenge Description
 
-            - Rumor says there's a secret dish but... no one can reach it!
+            - **Rumor says there's a secret dish but... no one can reach it!**
 
 ####   - Solution / Approach:
 
@@ -138,18 +138,18 @@ io.interactive()
 ## C00K3D Kitchen II
 ####    - Challenge Description
 
-            - The kitchen is now locked tighter… only the cleverest apprentice can reach the final dish.
+            - **The kitchen is now locked tighter… only the `cleverest apprentice` can reach the final dish.**
 
 
 ####   - Solution / Approach:
 
-            - We were given a binary (chall) vulnerable to format string attacks and buffer overflow but had all protections enabled
-            - Used format string leaks to extract:
-                - ELF base (%13$p)
-                - libc base (%17$p)
-                - stack address (%22$p)
-            - Calculated the return slot on the stack and overwrote the return address using a %hn partial write to point execution to our controlled chain.
-            - Built a ROP chain with a libc one_gadget, sent the payload, triggered code execution, and got the shell.
+            - We were given a binary (chall) **vulnerable** to `format string` attacks and `buffer overflow` but had all **protections** enabled
+            - Used `format string` leaks to extract:
+                - `ELF base (%13$p)`
+                - `libc base (%17$p)`
+                - `stack address (%22$p)`
+            - Calculated the **return slot** on the `stack` and `overwrote` the `return address` using a **%hn partial write** to point execution to our controlled chain.
+            - Built a `ROP` chain with a libc `one_gadget`, sent the payload, triggered code execution, and got the shell.
 
 #### - Script
 
@@ -228,17 +228,14 @@ io.interactive()
 ## Indus Veil
 ####    - Challenge Description
 
-            - The Indus system is heavily fortified. Breach its defenses to retrieve the hidden flag.
+            - **The Indus system is heavily fortified. Breach its defenses to retrieve the hidden flag.**
 
 ####   - Solution / Approach:
 
 
             - **What we had:** A vulnerable 32-bit chall binary with stack-canary protection, **prompt** "Enter your secret:", and a `libc.so.6` file available.
-
             - **Canary recovery:** Brute-force the canary byte-by-byte (skip 0x00/newline where appropriate), **append** discovered bytes, then `u32` the final 4-byte canary.
-
             - **Libc leak:** Build a **payload** -> `padding(72)` + `canary` + `saved_rbp_filler` + `puts@plt` + `main` + `puts@got` to call `puts(puts@got)` and return to `main`, read **leaked** puts to calculate `libc_base`.
-
             - **Exploit:** Compute `system()` and "/bin/sh" addresses from `libc_base`, send **final payload** `padding` + `canary` + `saved_rbp_filler` + `system` + `ret/junk` + `binsh` to get a **shell**.
 
 
@@ -310,4 +307,6 @@ io.interactive()
 
 ---
 
-Thank you for reading! I have not made them too detailed to keep it concise, but if you have any questions or need further clarification on any part of the writeups, feel free to reach out : )
+#### Thank you for reading!
+
+        **I have not made them too detailed to keep it concise, but if you have any `questions` or need further clarification on any part of the `writeups`, feel free to reach out : )**
