@@ -87,10 +87,10 @@ io.interactive()
 
 ####   - Solution / Approach:
 
-            - We were given a binary (chall) with a menu-based interface, vulnerable to buffer overflow but protected by a stack canary.
-            - Used the format string vulnerability in option 1 with %17$p to leak the stack canary.
-            - Crafted a payload: 72 bytes padding + leaked canary + fake RBP + address of chef_special().
-            - Sent the payload via option 2, triggered chef_special(), and retrieved the flag.
+            - We were given a **binary** (chall) with a `menu-based interface`, **vulnerable** to `buffer overflow` but **protected** by a `stack canary`.
+            - Used the `format string` **vulnerability** in **option** `1` with `%17$p` to **leak** the `stack canary`.
+            - Crafted a **payload:** `72 bytes padding` + `leaked canary` + `fake RBP` + `address of chef_special()`.
+            - Sent the **payload** via **option** `2`, **triggered** `chef_special()`, and retrieved the **flag**.
 
 #### - Script
 
@@ -234,7 +234,7 @@ io.interactive()
 
 
             - **What we had:** A vulnerable `32-bit` chall binary with `stack-canary` **protection**, **prompt** `Enter your secret:`, and a `libc.so.6` file available.
-            - **Canary recovery:** Brute-force the canary byte-by-byte (skip 0x00/newline where appropriate), **append** discovered bytes, then `u32` the final 4-byte canary.
+            - **Canary recovery:** **Brute-force** the `canary` **byte-by-byte** (skip 0x00/newline where appropriate), **append** discovered `bytes`, then `u32` the final **4-byte canary**.
             - **Libc leak:** Build a **payload** -> `padding(72)` + `canary` + `saved_rbp_filler` + `puts@plt` + `main` + `puts@got` to call `puts(puts@got)` and return to `main`, read **leaked** puts to calculate `libc_base`.
             - **Exploit:** Compute `system()` and `"/bin/sh"` addresses from `libc_base`, send **final payload** `padding` + `canary` + `saved_rbp_filler` + `system` + `ret/junk` + `binsh` to get a **shell**.
 
