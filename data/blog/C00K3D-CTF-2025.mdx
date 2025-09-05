@@ -236,7 +236,7 @@ io.interactive()
             - **What we had:** A vulnerable 32-bit chall binary with stack-canary protection, **prompt** "Enter your secret:", and a `libc.so.6` file available.
             - **Canary recovery:** Brute-force the canary byte-by-byte (skip 0x00/newline where appropriate), **append** discovered bytes, then `u32` the final 4-byte canary.
             - **Libc leak:** Build a **payload** -> `padding(72)` + `canary` + `saved_rbp_filler` + `puts@plt` + `main` + `puts@got` to call `puts(puts@got)` and return to `main`, read **leaked** puts to calculate `libc_base`.
-            - **Exploit:** Compute `system()` and "/bin/sh" addresses from `libc_base`, send **final payload** `padding` + `canary` + `saved_rbp_filler` + `system` + `ret/junk` + `binsh` to get a **shell**.
+            - **Exploit:** Compute `system()` and `"/bin/sh"` addresses from `libc_base`, send **final payload** `padding` + `canary` + `saved_rbp_filler` + `system` + `ret/junk` + `binsh` to get a **shell**.
 
 
 #### - Script
@@ -309,4 +309,4 @@ io.interactive()
 
 ## Thank you for reading!
 
-        **I have not made them too detailed to keep it concise, but if you have any `questions` or need further clarification on any part of the `writeups`, feel free to reach out : )**
+- **I have not made them too detailed to keep it concise, but if you have any `questions` or need further clarification on any part of the `writeups`, feel free to reach out : )**
