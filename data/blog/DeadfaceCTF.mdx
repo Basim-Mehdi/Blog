@@ -22,7 +22,7 @@ summary: Buffer overflow exploitation under seccomp restrictions in Deadface CTF
 
 ## TL;DR
 
-This `64-bit` ELF *PWN challenge* (`gravedigging`) has a classic `buffer overflow` (16-byte stack buffer + `gets`) but is protected by a *seccomp filter** that allows only a handful of syscalls: `read`, `write`, `open`, `getdents64`, `exit`, and `futex` (plus the usual thread/arch helpers). Because spawning a shell is impossible under seccomp, the solution uses ROP to invoke allowed syscalls directly (using small gadgets) to first list the current directory and then open and read the true flag file.
+This `64-bit` *ELF* **PWN challenge** (`gravedigging`) has a classic `buffer overflow` (16-byte stack buffer + `gets`) but is protected by a **seccomp filter** that allows only a handful of *syscalls:* `read`, `write`, `open`, `getdents64`, `exit`, and `futex` (plus the usual thread/arch helpers). Because spawning a shell is *impossible* under **seccomp**, the solution uses **ROP** to invoke allowed syscalls directly (using small gadgets) to first *list the current directory* and then open and read the true flag file.
 
 ## Challenge description
 
